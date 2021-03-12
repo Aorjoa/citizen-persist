@@ -1,11 +1,11 @@
 package citizen
 
 import (
-	"context"
 	"net/http"
 	"time"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/Aorjoa/citizen-persist/redis"
+
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
 )
@@ -21,17 +21,15 @@ type ErrorMessageResponse struct {
 }
 
 type citizen struct {
-	Logger      *zap.Logger
-	RedisClient *redis.Client
-	Context     *context.Context
+	Logger *zap.Logger
+	Redis  redis.DBStorage
 }
 
 // NewCitizenHandler should create new citizen handler with dependencies inject parameter
-func NewHandler(logger *zap.Logger, redis *redis.Client, context *context.Context) *citizen {
+func NewHandler(logger *zap.Logger, redis redis.DBStorage) *citizen {
 	return &citizen{
-		Logger:      logger,
-		RedisClient: redis,
-		Context:     context,
+		Logger: logger,
+		Redis:  redis,
 	}
 }
 
@@ -44,12 +42,12 @@ func (ci *citizen) PutCitizenIDToQueue(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(&ErrorMessageResponse{Message: "unable to parse request"})
 	}
 
-	_, err := ci.RedisClient.Get(*ci.Context, *cit.CitizenID).Result()
+	_, err := ci.Redis.GetData(*cit.CitizenID)
 	if err == nil {
 		return c.SendStatus(http.StatusConflict)
 	}
 
-	err = ci.RedisClient.Set(*ci.Context, *cit.CitizenID, true, 10*time.Second).Err()
+	err = ci.Redis.SetData(*cit.CitizenID, true, 10*time.Second)
 	if err != nil {
 		ci.Logger.Error("unable to set citizen id to redis")
 		return c.Status(http.StatusInternalServerError).JSON(&ErrorMessageResponse{Message: "unable to parse request"})

@@ -5,24 +5,15 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"time"
 
+	"github.com/Aorjoa/citizen-persist/citizen"
+	redisStore "github.com/Aorjoa/citizen-persist/redis"
 	"github.com/go-redis/redis/v8"
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
 )
 
 var ctx = context.Background()
-
-// CitizenRequest should use to map incoming request
-type CitizenRequest struct {
-	CitizenID *string `json:"citizen_id"`
-}
-
-// ErrorMessageResponse should use to respose message as an application standard
-type ErrorMessageResponse struct {
-	Message string `json:"message"`
-}
 
 func main() {
 	logger, err := zap.NewProduction()
@@ -37,6 +28,10 @@ func main() {
 		DB:       0,
 	})
 
+	rs := redisStore.NewStorage(rdb, &ctx)
+
+	c := citizen.NewHandler(logger, rs)
+
 	app := fiber.New()
 
 	ra := app.Group("/api")
@@ -45,26 +40,7 @@ func main() {
 	})
 
 	v1 := app.Group("/api/v1")
-	v1.Post("/citizens", func(c *fiber.Ctx) error {
-		var ci CitizenRequest
-		if err := c.BodyParser(&ci); err != nil {
-			logger.Error("unable to parse request")
-			return c.Status(http.StatusBadRequest).JSON(&ErrorMessageResponse{Message: "unable to parse request"})
-		}
-
-		_, err := rdb.Get(ctx, *ci.CitizenID).Result()
-		if err == nil {
-			return c.SendStatus(http.StatusConflict)
-		}
-
-		err = rdb.Set(ctx, *ci.CitizenID, true, 10*time.Second).Err()
-		if err != nil {
-			logger.Error("unable to set citizen id to redis")
-			return c.Status(http.StatusInternalServerError).JSON(&ErrorMessageResponse{Message: "unable to set citizen id to redis to parse request"})
-		}
-
-		return c.SendString("Hello, World 👋!")
-	})
+	v1.Post("/citizens", c.PutCitizenIDToQueue)
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, os.Interrupt)
