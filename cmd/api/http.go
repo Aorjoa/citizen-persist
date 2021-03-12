@@ -14,6 +14,16 @@ import (
 
 var ctx = context.Background()
 
+// CitizenRequest should use to map incoming request
+type CitizenRequest struct {
+	CitizenID *string `json:"citizen_id"`
+}
+
+// ErrorMessageResponse should use to respose message as an application standard
+type ErrorMessageResponse struct {
+	Message string `json:"message"`
+}
+
 func main() {
 	logger, err := zap.NewProduction()
 	if err != nil {
@@ -36,14 +46,21 @@ func main() {
 
 	v1 := app.Group("/api/v1")
 	v1.Post("/citizens", func(c *fiber.Ctx) error {
-		_, err := rdb.Get(ctx, "cID").Result()
-		if err == nil {
-			c.SendStatus(http.StatusConflict)
+		var ci CitizenRequest
+		if err := c.BodyParser(&ci); err != nil {
+			logger.Error("unable to parse request")
+			return c.Status(http.StatusBadRequest).JSON(&ErrorMessageResponse{Message: "unable to parse request"})
 		}
 
-		err = rdb.Set(ctx, "cID", "1411900101002", 10*time.Second).Err()
+		_, err := rdb.Get(ctx, *ci.CitizenID).Result()
+		if err == nil {
+			return c.SendStatus(http.StatusConflict)
+		}
+
+		err = rdb.Set(ctx, *ci.CitizenID, true, 10*time.Second).Err()
 		if err != nil {
-			panic(err)
+			logger.Error("unable to set citizen id to redis")
+			return c.Status(http.StatusInternalServerError).JSON(&ErrorMessageResponse{Message: "unable to set citizen id to redis to parse request"})
 		}
 
 		return c.SendString("Hello, World 👋!")
