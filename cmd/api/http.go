@@ -1,13 +1,18 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"os/signal"
+	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/zap"
 )
+
+var ctx = context.Background()
 
 func main() {
 	logger, err := zap.NewProduction()
@@ -15,6 +20,12 @@ func main() {
 		os.Exit(1)
 	}
 	defer logger.Sync()
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
 
 	app := fiber.New()
 
@@ -25,6 +36,16 @@ func main() {
 
 	v1 := app.Group("/api/v1")
 	v1.Post("/citizens", func(c *fiber.Ctx) error {
+		_, err := rdb.Get(ctx, "cID").Result()
+		if err == nil {
+			c.SendStatus(http.StatusConflict)
+		}
+
+		err = rdb.Set(ctx, "cID", "1411900101002", 10*time.Second).Err()
+		if err != nil {
+			panic(err)
+		}
+
 		return c.SendString("Hello, World 👋!")
 	})
 
