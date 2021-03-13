@@ -1,9 +1,0 @@
-mode: set
-github.com/Aorjoa/citizen-persist/citizen/citizen_handler.go:29.69,34.2 1 1
-github.com/Aorjoa/citizen-persist/citizen/citizen_handler.go:38.60,40.43 2 1
-github.com/Aorjoa/citizen-persist/citizen/citizen_handler.go:45.2,46.16 2 1
-github.com/Aorjoa/citizen-persist/citizen/citizen_handler.go:50.2,51.16 2 1
-github.com/Aorjoa/citizen-persist/citizen/citizen_handler.go:56.2,56.43 1 1
-github.com/Aorjoa/citizen-persist/citizen/citizen_handler.go:40.43,43.3 2 0
-github.com/Aorjoa/citizen-persist/citizen/citizen_handler.go:46.16,48.3 1 1
-github.com/Aorjoa/citizen-persist/citizen/citizen_handler.go:51.16,54.3 2 0
