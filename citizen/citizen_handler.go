@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Aorjoa/citizen-persist/constant"
 	"github.com/Aorjoa/citizen-persist/mq"
 	"github.com/Aorjoa/citizen-persist/redis"
 
@@ -45,8 +46,6 @@ func (ci *citizen) PutCitizenIDToQueue(c *fiber.Ctx) error {
 		return c.Status(http.StatusBadRequest).JSON(&ErrorMessageResponse{Message: "unable to parse request"})
 	}
 
-	ci.KafkaMQ.Push([]byte("Key"), []byte("Valueeeee"))
-
 	_, err := ci.Redis.GetData(*cit.CitizenID)
 	if err == nil {
 		return c.SendStatus(http.StatusConflict)
@@ -58,5 +57,7 @@ func (ci *citizen) PutCitizenIDToQueue(c *fiber.Ctx) error {
 		return c.Status(http.StatusInternalServerError).JSON(&ErrorMessageResponse{Message: "unable to parse request"})
 	}
 
-	return c.SendString("Hello, World 👋!")
+	ci.KafkaMQ.Push([]byte(constant.CitizenMesssage), []byte(*cit.CitizenID))
+
+	return c.SendStatus(http.StatusNoContent)
 }

@@ -65,7 +65,7 @@ func TestPutCitizenIDToQueue_Success_WithoutRedisHit(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/citizens", rd)
 	req.Header.Set("Content-Type", "application/json")
 	resp, _ := app.Test(req)
-	utils.AssertEqual(t, http.StatusOK, resp.StatusCode, "Status code")
+	utils.AssertEqual(t, http.StatusNoContent, resp.StatusCode, "Status code")
 }
 
 var _ redis.DBStorage = &mockRedis{}
