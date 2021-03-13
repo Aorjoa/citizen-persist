@@ -7,6 +7,7 @@ import (
 	"os/signal"
 
 	"github.com/Aorjoa/citizen-persist/citizen"
+	"github.com/Aorjoa/citizen-persist/middleware"
 	redisStore "github.com/Aorjoa/citizen-persist/redis"
 	"github.com/go-redis/redis/v8"
 	"github.com/gofiber/fiber/v2"
@@ -40,6 +41,8 @@ func main() {
 	})
 
 	v1 := app.Group("/api/v1")
+	mwl := middleware.Logger(logger)
+	v1.Use(mwl.LogWithContext)
 	v1.Post("/citizens", c.PutCitizenIDToQueue)
 
 	sc := make(chan os.Signal, 1)
