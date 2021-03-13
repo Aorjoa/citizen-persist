@@ -15,4 +15,6 @@ require (
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.16.0
 	golang.org/x/sys v0.0.0-20210309074719-68d13333faf2 // indirect
+	gorm.io/driver/postgres v1.0.8
+	gorm.io/gorm v1.21.3
 )
