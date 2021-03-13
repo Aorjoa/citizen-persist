@@ -8,9 +8,11 @@ import (
 
 	"github.com/Aorjoa/citizen-persist/citizen"
 	"github.com/Aorjoa/citizen-persist/middleware"
+	"github.com/Aorjoa/citizen-persist/mq"
 	redisStore "github.com/Aorjoa/citizen-persist/redis"
 	"github.com/go-redis/redis/v8"
 	"github.com/gofiber/fiber/v2"
+	"github.com/segmentio/kafka-go"
 	"go.uber.org/zap"
 )
 
@@ -23,6 +25,14 @@ func main() {
 	}
 	defer logger.Sync()
 
+	w := &kafka.Writer{
+		Addr:     kafka.TCP("localhost:9092"),
+		Topic:    "topic",
+		Balancer: &kafka.LeastBytes{},
+	}
+
+	m := mq.NewKafka(w, nil, &ctx)
+
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "",
@@ -31,7 +41,7 @@ func main() {
 
 	rs := redisStore.NewStorage(rdb, &ctx)
 
-	c := citizen.NewHandler(logger, rs)
+	c := citizen.NewHandler(logger, m, rs)
 
 	app := fiber.New()
 

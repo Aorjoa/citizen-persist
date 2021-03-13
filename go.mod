@@ -8,6 +8,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.5.0
 	github.com/gofiber/utils v0.1.2
 	github.com/klauspost/compress v1.11.12 // indirect
+	github.com/segmentio/kafka-go v0.4.10
 	github.com/stretchr/testify v1.7.0
 	github.com/valyala/fasthttp v1.22.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect

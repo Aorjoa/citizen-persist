@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Aorjoa/citizen-persist/mq"
 	"github.com/Aorjoa/citizen-persist/redis"
 
 	"github.com/gofiber/fiber/v2"
@@ -21,15 +22,17 @@ type ErrorMessageResponse struct {
 }
 
 type citizen struct {
-	Logger *zap.Logger
-	Redis  redis.DBStorage
+	Logger  *zap.Logger
+	KafkaMQ mq.KafkaMQ
+	Redis   redis.DBStorage
 }
 
 // NewCitizenHandler should create new citizen handler with dependencies inject parameter
-func NewHandler(logger *zap.Logger, redis redis.DBStorage) *citizen {
+func NewHandler(logger *zap.Logger, mq mq.KafkaMQ, redis redis.DBStorage) *citizen {
 	return &citizen{
-		Logger: logger,
-		Redis:  redis,
+		Logger:  logger,
+		KafkaMQ: mq,
+		Redis:   redis,
 	}
 }
 
@@ -41,6 +44,8 @@ func (ci *citizen) PutCitizenIDToQueue(c *fiber.Ctx) error {
 		ci.Logger.Error("unable to parse request")
 		return c.Status(http.StatusBadRequest).JSON(&ErrorMessageResponse{Message: "unable to parse request"})
 	}
+
+	ci.KafkaMQ.Push([]byte("Key"), []byte("Valueeeee"))
 
 	_, err := ci.Redis.GetData(*cit.CitizenID)
 	if err == nil {

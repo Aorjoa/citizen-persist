@@ -28,7 +28,10 @@ func TestPutCitizenIDToQueue_Success_WithHitRedis(t *testing.T) {
 	rs := &mockRedis{}
 	rs.On("GetData", mock.Anything).Return(true, nil)
 
-	c := citizen.NewHandler(logger, rs)
+	mk := &mockKafka{}
+	mk.On("Push", mock.Anything, mock.Anything).Return(nil)
+
+	c := citizen.NewHandler(logger, mk, rs)
 
 	rd := strings.NewReader(`{"citizen_id": "1234567890123"}`)
 
@@ -51,7 +54,10 @@ func TestPutCitizenIDToQueue_Success_WithoutRedisHit(t *testing.T) {
 	rs.On("GetData", mock.Anything).Return(false, mErr)
 	rs.On("SetData", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-	c := citizen.NewHandler(logger, rs)
+	mk := &mockKafka{}
+	mk.On("Push", mock.Anything, mock.Anything).Return(nil)
+
+	c := citizen.NewHandler(logger, mk, rs)
 
 	rd := strings.NewReader(`{"citizen_id": "1234567890123"}`)
 
@@ -75,5 +81,21 @@ func (m *mockRedis) GetData(key string) (interface{}, error) {
 
 func (m *mockRedis) SetData(key string, value interface{}, expiration time.Duration) error {
 	args := m.Mock.Called(key, value, expiration)
+	return args.Error(0)
+}
+
+var _ redis.DBStorage = &mockRedis{}
+
+type mockKafka struct {
+	mock.Mock
+}
+
+func (m *mockKafka) ReadMessage() ([]byte, []byte, error) {
+	args := m.Mock.Called()
+	return []byte(args.String(0)), []byte(args.String(1)), args.Error(2)
+}
+
+func (m *mockKafka) Push(key, value []byte) error {
+	args := m.Mock.Called(key, value)
 	return args.Error(0)
 }
