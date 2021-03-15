@@ -19,6 +19,6 @@ func NewPersistent(logger *zap.Logger, db *gorm.DB) *persistent {
 	}
 }
 
-func (p *persistent) Create(ct *model.Citizen) error {
+func (p persistent) Create(ct *model.Citizen) error {
 	return p.DB.Create(ct).Error
 }

@@ -19,11 +19,11 @@ type Storage struct {
 	Context *context.Context
 }
 
-func (rs *Storage) GetData(key string) (interface{}, error) {
+func (rs Storage) GetData(key string) (interface{}, error) {
 	return rs.Client.Get(*rs.Context, key).Result()
 }
 
-func (rs *Storage) SetData(key string, value interface{}, expiration time.Duration) error {
+func (rs Storage) SetData(key string, value interface{}, expiration time.Duration) error {
 	return rs.Client.Set(*rs.Context, key, value, expiration).Err()
 }
 
