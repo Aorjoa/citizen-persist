@@ -12,8 +12,6 @@ type KafkaMQ interface {
 	Push(key, value []byte) error
 }
 
-var _ KafkaMQ = &Storage{}
-
 type Storage struct {
 	Writer  *kafka.Writer
 	Reader  *kafka.Reader

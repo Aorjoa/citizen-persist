@@ -12,8 +12,6 @@ type DBStorage interface {
 	SetData(key string, value interface{}, expiration time.Duration) error
 }
 
-var _ DBStorage = &Storage{}
-
 type Storage struct {
 	Client  *redis.Client
 	Context context.Context
