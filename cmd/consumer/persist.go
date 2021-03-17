@@ -32,7 +32,7 @@ func main() {
 
 	r.SetOffset(kafka.LastOffset)
 
-	m := mq.NewKafka(nil, r, &ctx)
+	m := mq.NewKafka(nil, r, ctx)
 
 	cn := "host=localhost user=root password=root dbname=citizens port=5432 sslmode=disable TimeZone=Asia/Bangkok"
 	db, err := gorm.Open(postgres.Open(cn), &gorm.Config{})
