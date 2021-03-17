@@ -90,12 +90,12 @@ type mockKafka struct {
 	mock.Mock
 }
 
-func (m mockKafka) ReadMessage() ([]byte, []byte, error) {
+func (m *mockKafka) ReadMessage() ([]byte, []byte, error) {
 	args := m.Mock.Called()
 	return []byte(args.String(0)), []byte(args.String(1)), args.Error(2)
 }
 
-func (m mockKafka) Push(key, value []byte) error {
+func (m *mockKafka) Push(key, value []byte) error {
 	args := m.Mock.Called(key, value)
 	return args.Error(0)
 }
