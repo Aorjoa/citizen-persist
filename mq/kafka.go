@@ -12,16 +12,22 @@ type KafkaMQ interface {
 	Push(key, value []byte) error
 }
 
-var _ KafkaMQ = &Storage{}
-
 type Storage struct {
 	Writer  *kafka.Writer
 	Reader  *kafka.Reader
-	Context *context.Context
+	Context context.Context
+}
+
+func NewKafka(writer *kafka.Writer, reader *kafka.Reader, context context.Context) KafkaMQ {
+	return &Storage{
+		Writer:  writer,
+		Reader:  reader,
+		Context: context,
+	}
 }
 
 func (s *Storage) ReadMessage() ([]byte, []byte, error) {
-	m, err := s.Reader.ReadMessage(*s.Context)
+	m, err := s.Reader.ReadMessage(s.Context)
 	if err != nil {
 		return []byte{}, []byte{}, err
 	}
@@ -35,13 +41,5 @@ func (s *Storage) Push(key, value []byte) error {
 		Time:  time.Now(),
 	}
 
-	return s.Writer.WriteMessages(*s.Context, message)
-}
-
-func NewKafka(writer *kafka.Writer, reader *kafka.Reader, context *context.Context) KafkaMQ {
-	return &Storage{
-		Writer:  writer,
-		Reader:  reader,
-		Context: context,
-	}
+	return s.Writer.WriteMessages(s.Context, message)
 }

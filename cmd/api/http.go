@@ -31,7 +31,7 @@ func main() {
 		Balancer: &kafka.LeastBytes{},
 	}
 
-	m := mq.NewKafka(w, nil, &ctx)
+	m := mq.NewKafka(w, nil, ctx)
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
@@ -39,7 +39,7 @@ func main() {
 		DB:       0,
 	})
 
-	rs := redisStore.NewStorage(rdb, &ctx)
+	rs := redisStore.NewStorage(rdb, ctx)
 
 	c := citizen.NewHandler(logger, m, rs)
 
