@@ -14,7 +14,7 @@ import (
 
 // CitizenRequest should use to map incoming request
 type CitizenRequest struct {
-	CitizenID *string `json:"citizen_id"`
+	CitizenID string `json:"citizen_id"`
 }
 
 // ErrorMessageResponse should use to respose message as an application standard
@@ -42,22 +42,28 @@ func NewHandler(logger *zap.Logger, mq mq.KafkaMQ, redis redis.DBStorage) *citiz
 func (ci *citizen) PutCitizenIDToQueue(c *fiber.Ctx) error {
 	var cit CitizenRequest
 	if err := c.BodyParser(&cit); err != nil {
-		ci.Logger.Error("unable to parse request")
-		return c.Status(http.StatusBadRequest).JSON(&ErrorMessageResponse{Message: "unable to parse request"})
+		msg := "unable to parse request"
+		ci.Logger.Error(msg)
+		return c.Status(http.StatusBadRequest).JSON(Error(msg))
 	}
 
-	_, err := ci.Redis.GetData(*cit.CitizenID)
+	_, err := ci.Redis.GetData(cit.CitizenID)
 	if err == nil {
 		return c.SendStatus(http.StatusConflict)
 	}
 
-	err = ci.Redis.SetData(*cit.CitizenID, true, 10*time.Second)
+	err = ci.Redis.SetData(cit.CitizenID, true, 10*time.Second)
 	if err != nil {
-		ci.Logger.Error("unable to set citizen id to redis")
-		return c.Status(http.StatusInternalServerError).JSON(&ErrorMessageResponse{Message: "unable to parse request"})
+		msg := "unable to set citizen id to redis"
+		ci.Logger.Error(msg)
+		return c.Status(http.StatusInternalServerError).JSON(Error(msg))
 	}
 
-	ci.KafkaMQ.Push([]byte(constant.CitizenMesssage), []byte(*cit.CitizenID))
+	ci.KafkaMQ.Push([]byte(constant.CitizenMesssage), []byte(cit.CitizenID))
 
 	return c.SendStatus(http.StatusNoContent)
+}
+
+func Error(message string) ErrorMessageResponse {
+	return ErrorMessageResponse{Message: message}
 }
